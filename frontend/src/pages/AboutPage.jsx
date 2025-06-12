@@ -1,0 +1,6 @@
+
+const AboutPage = () => (
+  <div className="bg-white"><div className="container mx-auto px-6 py-12"><div className="max-w-3xl mx-auto"><h1 className="text-4xl font-bold text-gray-800 mb-4">About Kano Price Checker</h1><p className="text-lg text-gray-600 mb-6">Kano Price Checker was born from a simple idea: to bring transparency and convenience to grocery shopping in the bustling markets of Kano, Nigeria. We believe that everyone deserves access to fair and up-to-date pricing information to make informed decisions for their families and businesses.</p><p className="text-lg text-gray-600 mb-6">Our platform connects you directly with a network of trusted shop owners who provide real-time price updates on a wide variety of goods. Whether you're planning a weekly shopping trip, catering for an event, or just curious about the current market rates, our app is your reliable guide.</p><h2 className="text-2xl font-bold text-gray-800 mt-8 mb-3">Our Mission</h2><p className="text-lg text-gray-600">Our mission is to empower consumers and support local vendors by creating a central, easy-to-use hub for market price information. We aim to foster a community built on trust and help everyone save time and money.</p></div></div></div>
+);
+
+export default AboutPage
