@@ -10,6 +10,7 @@ import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import NotFoundPage from './pages/NotFoundPage';
+import LoginPage from './pages/LoginPage.jsx';
 
 /**
  * The main App component.
@@ -25,6 +26,7 @@ const App = () => {
           <Routes>
             {/* Route for the Home Page */}
             <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
 
             {/* Route for the About Page */}
             <Route path="/about" element={<AboutPage />} />
