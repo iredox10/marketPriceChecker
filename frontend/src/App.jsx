@@ -15,6 +15,9 @@ import AdminDashboardPage from './pages/admin/Dashboard.jsx';
 import ManageShopOwnersPage from './pages/admin/ManageShopOwner.jsx';
 import ViewAllProductsPage from './pages/admin/Products.jsx';
 import ShopOwnerDashboardPage from './pages/shopowner/Dashboard.jsx';
+import SearchResultsPage from './pages/SearchResultPage.jsx';
+import MarketListPage from './pages/market/MarketList.jsx';
+import MarketDetailPage from './pages/market/MarketDetail.jsx';
 
 /**
  * The main App component.
@@ -32,6 +35,8 @@ const App = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
 
+            <Route path="/search" element={<SearchResultsPage />} />
+
 
 
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
@@ -39,10 +44,13 @@ const App = () => {
             <Route path="/admin/view-products" element={<ViewAllProductsPage />} />
 
 
-            <Route path="/shop-owner/dashboard" element={<ShopOwnerDashboardPage />} />
+            <Route path="/search?q" element={<ShopOwnerDashboardPage />} />
 
             {/* Route for the About Page */}
             <Route path="/about" element={<AboutPage />} />
+
+            <Route path="/market-list" element={<MarketListPage />} />
+            <Route path="/markets/:marketId" element={<MarketDetailPage />} />
 
             {/* Catch-all route for pages that don't exist */}
             <Route path="*" element={<NotFoundPage />} />
