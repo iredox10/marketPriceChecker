@@ -14,6 +14,7 @@ import LoginPage from './pages/LoginPage.jsx';
 import AdminDashboardPage from './pages/admin/Dashboard.jsx';
 import ManageShopOwnersPage from './pages/admin/ManageShopOwner.jsx';
 import ViewAllProductsPage from './pages/admin/Products.jsx';
+import ShopOwnerDashboardPage from './pages/shopowner/Dashboard.jsx';
 
 /**
  * The main App component.
@@ -38,6 +39,7 @@ const App = () => {
             <Route path="/admin/view-products" element={<ViewAllProductsPage />} />
 
 
+            <Route path="/shop-owner/dashboard" element={<ShopOwnerDashboardPage />} />
 
             {/* Route for the About Page */}
             <Route path="/about" element={<AboutPage />} />
