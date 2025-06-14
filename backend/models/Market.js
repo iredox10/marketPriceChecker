@@ -1,5 +1,5 @@
 
-const mongoose = require('mongoose');
+import mongoose from 'mongoose'
 
 const marketSchema = new mongoose.Schema({
   name: {
@@ -27,4 +27,4 @@ const marketSchema = new mongoose.Schema({
 });
 
 const Market = mongoose.model('Market', marketSchema);
-module.exports = Market;
+export default Market;

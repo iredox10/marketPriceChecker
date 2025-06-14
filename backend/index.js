@@ -21,7 +21,7 @@ const app = express();
 // --- Database Connection ---
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost/market-price');
     console.log('MongoDB Connected Successfully...');
   } catch (err) {
     console.error(`Error: ${err.message}`);

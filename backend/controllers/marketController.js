@@ -1,10 +1,10 @@
 
-const Market = require('../models/Market');
+import Market from '../models/Market.js'
 
 // @desc    Create a new market
 // @route   POST /api/markets
 // @access  Private/Admin
-exports.createMarket = async (req, res) => {
+export const createMarket = async (req, res) => {
   try {
     const market = new Market(req.body);
     const createdMarket = await market.save();
@@ -17,7 +17,7 @@ exports.createMarket = async (req, res) => {
 // @desc    Get all markets
 // @route   GET /api/markets
 // @access  Public
-exports.getAllMarkets = async (req, res) => {
+export const getAllMarkets = async (req, res) => {
   try {
     const markets = await Market.find({});
     res.json(markets);
@@ -29,7 +29,7 @@ exports.getAllMarkets = async (req, res) => {
 // @desc    Get a single market by ID
 // @route   GET /api/markets/:id
 // @access  Public
-exports.getMarketById = async (req, res) => {
+export const getMarketById = async (req, res) => {
   try {
     const market = await Market.findById(req.params.id);
     if (market) {

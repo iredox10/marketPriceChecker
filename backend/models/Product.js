@@ -10,7 +10,6 @@ const priceHistorySchema = new mongoose.Schema({
   shopOwner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
   },
   date: {
     type: Date,

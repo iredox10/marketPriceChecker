@@ -1,10 +1,10 @@
 
-const Product = require('../models/Product');
+import Product from '../models/Product.js'
 
 // @desc    Get all products (can be filtered by market later)
 // @route   GET /api/products
 // @access  Public
-exports.getAllProducts = async (req, res) => {
+export const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find({}).populate('market', 'name').populate('priceHistory.shopOwner', 'name shopName');
     res.json(products);
@@ -16,7 +16,7 @@ exports.getAllProducts = async (req, res) => {
 // @desc    Create a new product
 // @route   POST /api/products
 // @access  Private/Admin
-exports.createProduct = async (req, res) => {
+export const createProduct = async (req, res) => {
   try {
     const product = new Product(req.body);
     const createdProduct = await product.save();
@@ -29,7 +29,7 @@ exports.createProduct = async (req, res) => {
 // @desc    Add a price update to a product
 // @route   POST /api/products/:id/prices
 // @access  Private/ShopOwner
-exports.addPriceToProduct = async (req, res) => {
+export const addPriceToProduct = async (req, res) => {
   const { price } = req.body;
   // The shop owner's ID would come from the authenticated user's token
   const shopOwnerId = req.user._id;

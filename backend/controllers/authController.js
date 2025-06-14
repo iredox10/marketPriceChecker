@@ -1,6 +1,6 @@
 
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
+import User from '../models/User.js'
+import jwt from 'jsonwebtoken'
 
 // --- Helper Function to Generate JWT ---
 const generateToken = (id, role) => {
@@ -15,7 +15,7 @@ const generateToken = (id, role) => {
  * @route   POST /api/auth/register
  * @access  Public
  */
-exports.registerUser = async (req, res) => {
+export const registerUser = async (req, res) => {
   const { name, email, password, role, shopName, market } = req.body;
 
   try {
@@ -57,7 +57,7 @@ exports.registerUser = async (req, res) => {
  * @route   POST /api/auth/login
  * @access  Public
  */
-exports.loginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
