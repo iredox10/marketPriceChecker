@@ -4,11 +4,15 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import path from 'path';
+// --- Import the new error handling middleware ---
+import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 // --- Import Route Files ---
 import authRoutes from './routes/authRoutes.js';
 import marketRoutes from './routes/marketRoutes.js';
 import productRoutes from './routes/productRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import priceReportRoutes from './routes/priceReportRoutes.js';
 
 // --- Initial Configuration ---
 dotenv.config();
@@ -27,15 +31,16 @@ const connectDB = async () => {
 };
 connectDB();
 
-// --- Middleware ---
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // To accept JSON data in the request body
+// --- Core Middleware ---
+app.use(cors());
+app.use(express.json());
 
 // --- API Routes ---
-// This tells the app to use your route files for any requests to these paths
 app.use('/api/auth', authRoutes);
 app.use('/api/markets', marketRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/reports', priceReportRoutes);
 
 
 // --- Welcome Route ---
@@ -44,8 +49,15 @@ app.get('/', (req, res) => {
 });
 
 
+// --- Custom Error Handling Middleware ---
+// This MUST be after all your API routes.
+// 1. Catches requests to non-existent routes
+app.use(notFound);
+// 2. Catches all other errors passed by next(error)
+app.use(errorHandler);
+
+
 // --- Server Initialization ---
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`));
-

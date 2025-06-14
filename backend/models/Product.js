@@ -1,5 +1,5 @@
 
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // --- Sub-document Schema for Price History ---
 const priceHistorySchema = new mongoose.Schema({
@@ -7,7 +7,6 @@ const priceHistorySchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  // Reference to the user (who must have the 'ShopOwner' role) that submitted the price
   shopOwner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -35,7 +34,6 @@ const productSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  // Tracks which market this product is generally associated with
   market: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Market',
@@ -50,8 +48,13 @@ const productSchema = new mongoose.Schema({
   timestamps: true,
 });
 
+// --- Text Index for Efficient Searching ---
+// This tells MongoDB to create an index that allows for fast, word-based searches
+// on the 'name' and 'description' fields.
+productSchema.index({ name: 'text', description: 'text' });
+
+
 // --- Mongoose Method: Calculate Average Price ---
-// This function can be called to update the average price based on the history
 productSchema.methods.calculateAveragePrice = function() {
   if (this.priceHistory.length === 0) {
     this.averagePrice = 0;
@@ -63,4 +66,4 @@ productSchema.methods.calculateAveragePrice = function() {
 
 
 const Product = mongoose.model('Product', productSchema);
-module.exports = Product;
+export default Product;
