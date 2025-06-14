@@ -28,6 +28,7 @@ const Header = () => {
           <Link to="/" className="text-2xl font-bold text-gray-800">KanoPrice<span className="text-green-600">Checker</span></Link>
           <nav className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-gray-600 hover:text-green-600 transition-colors">Home</Link>
+            <Link to="/market-list" className="text-gray-600 hover:text-green-600 transition-colors">Markets</Link>
             <Link to="/about" className="text-gray-600 hover:text-green-600 transition-colors">About</Link>
           </nav>
           <div className="md:hidden">
@@ -46,6 +47,7 @@ const Header = () => {
     </header>
   );
 };
+
 export default Header; // This line is conventionally at the end of the file
 
 // This would be src/components/Footer.jsx

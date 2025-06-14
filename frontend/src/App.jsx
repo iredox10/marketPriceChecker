@@ -18,6 +18,9 @@ import ShopOwnerDashboardPage from './pages/shopowner/Dashboard.jsx';
 import SearchResultsPage from './pages/SearchResultPage.jsx';
 import MarketListPage from './pages/market/MarketList.jsx';
 import MarketDetailPage from './pages/market/MarketDetail.jsx';
+import RegistrationPage from './pages/user/Registration.jsx';
+import UserProfilePage from './pages/user/Profile.jsx';
+import AdminPriceReportsPage from './pages/admin/PriceReport.jsx';
 
 /**
  * The main App component.
@@ -42,9 +45,13 @@ const App = () => {
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="/admin/manage-shop-owners" element={<ManageShopOwnersPage />} />
             <Route path="/admin/view-products" element={<ViewAllProductsPage />} />
+            <Route path="/admin-price-report" element={<AdminPriceReportsPage />} />
 
 
-            <Route path="/search?q" element={<ShopOwnerDashboardPage />} />
+            <Route path="register" element={<RegistrationPage />} />
+            <Route path="/profile" element={<UserProfilePage />} />
+
+            <Route path="/shop-owner/dashboard" element={<ShopOwnerDashboardPage />} />
 
             {/* Route for the About Page */}
             <Route path="/about" element={<AboutPage />} />
