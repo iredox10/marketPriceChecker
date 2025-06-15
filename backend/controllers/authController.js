@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 // --- Helper Function to Generate JWT ---
 const generateToken = (id, role) => {
   // The JWT_SECRET should be in your .env file
-  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET || "secret", {
     expiresIn: '30d', // Token expires in 30 days
   });
 };

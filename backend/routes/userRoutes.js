@@ -16,7 +16,6 @@ router.use(protect, admin);
 // @route   GET /api/users
 // @desc    Get all users
 router.route('/').get(getUsers);
-
 // @route   GET, PUT, DELETE /api/users/:id
 // @desc    Get, update, or delete a single user
 router

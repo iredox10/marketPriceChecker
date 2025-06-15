@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+// Import the login function from our API service
+import { login } from '../services/api';
 
 /**
  * LoginPage Component
@@ -12,33 +14,56 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   /**
-   * Handles the form submission.
-   * In a real app, this would make an API call to authenticate the user.
+   * Handles the form submission by calling the backend API.
    */
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError(''); // Clear previous errors
     if (!email || !password) {
-      alert('Please enter both email and password.');
+      setError('Please enter both email and password.');
       return;
     }
 
     setIsLoading(true);
-    console.log(`Attempting to log in as ${role} with email: ${email}`);
 
-    // --- MOCK API CALL ---
-    // Replace this with your actual authentication logic
-    setTimeout(() => {
+    try {
+      // Call the login API service
+      const { data } = await login(email, password);
+
+      // Important: Check if the role matches the selected tab
+      if (data.role !== role) {
+        setError(`You are not registered as a ${role}. Please select the correct role.`);
+        setIsLoading(false);
+        return;
+      }
+
+      // Save user info to localStorage to persist login state
+      localStorage.setItem('userInfo', JSON.stringify(data));
+
       setIsLoading(false);
-      // On successful login, you would typically receive a token and user data.
-      // Then, you would navigate the user to their dashboard.
-      alert(`Successfully logged in as ${role}! You would be redirected to your dashboard now.`);
-      // Example redirection:
-      // if (role === 'Admin') navigate('/admin/dashboard');
-      // else navigate('/shop-owner/dashboard');
-    }, 1500);
+
+      // Redirect user based on their role
+      if (data.role === 'Admin') {
+        navigate('/admin/dashboard');
+      } else if (data.role === 'ShopOwner') {
+        navigate('/shop-owner/dashboard');
+      } else {
+        // Default redirect for regular users
+        navigate('/profile');
+      }
+
+    } catch (err) {
+      // Display error message from the backend, or a generic one
+      const message = err.response && err.response.data.message
+        ? err.response.data.message
+        : 'Login failed. Please check your credentials.';
+      setError(message);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -49,7 +74,10 @@ const LoginPage = () => {
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Welcome back!
+            Or{' '}
+            <Link to="/register" className="font-medium text-green-600 hover:text-green-500">
+              create a new account
+            </Link>
           </p>
         </div>
 
@@ -72,6 +100,11 @@ const LoginPage = () => {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative text-center" role="alert">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email-address" className="sr-only">Email address</label>
@@ -102,7 +135,6 @@ const LoginPage = () => {
               />
             </div>
           </div>
-
           <div className="flex items-center justify-end">
             <div className="text-sm">
               <a href="#" className="font-medium text-green-600 hover:text-green-500">
@@ -110,7 +142,6 @@ const LoginPage = () => {
               </a>
             </div>
           </div>
-
           <div>
             <button
               type="submit"
