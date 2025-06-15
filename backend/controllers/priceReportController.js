@@ -51,7 +51,6 @@ export const approvePriceReport = async (req, res) => {
       return res.status(404).json({ message: 'Report not found' });
     }
 
-    // Find the corresponding product and shop owner to update the price history
     const product = await Product.findOne({ name: report.productName });
     const shopOwner = await User.findOne({ shopName: report.shopName, role: 'ShopOwner' });
 
@@ -59,20 +58,16 @@ export const approvePriceReport = async (req, res) => {
       return res.status(400).json({ message: 'Cannot approve: Corresponding product or shop owner not found.' });
     }
 
-    // Add to the product's price history
     product.priceHistory.push({
       price: report.reportedPrice,
       shopOwner: shopOwner._id,
     });
 
-    // Recalculate average and save
     product.calculateAveragePrice();
     await product.save();
 
-    // Mark the report as approved (or delete it)
     report.status = 'Approved';
     await report.save();
-    // Or await report.deleteOne();
 
     res.json({ message: 'Report approved and product price updated.' });
 
@@ -97,5 +92,20 @@ export const rejectPriceReport = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: 'Error rejecting report', error: error.message });
+  }
+};
+
+
+/**
+ * @desc    Get reports submitted by the logged-in user
+ * @route   GET /api/reports/myreports
+ * @access  Private
+ */
+export const getMyReports = async (req, res, next) => {
+  try {
+    const reports = await PriceReport.find({ reportedBy: req.user._id }).sort({ createdAt: -1 });
+    res.json(reports);
+  } catch (error) {
+    next(error);
   }
 };

@@ -1,6 +1,7 @@
 
 import express from 'express';
-import { registerUser, loginUser } from '../controllers/authController.js';
+import { registerUser, loginUser, getUserProfile } from '../controllers/authController.js';
+import { protect } from '../middleware/authMiddleware.js'; // Import protect middleware
 
 const router = express.Router();
 
@@ -11,5 +12,10 @@ router.post('/register', registerUser);
 // @route   POST /api/auth/login
 // @desc    Authenticate user and get token
 router.post('/login', loginUser);
+
+// @route   GET /api/auth/profile
+// @desc    Get logged-in user's profile (Protected Route)
+router.get('/profile', protect, getUserProfile);
+
 
 export default router;

@@ -51,6 +51,8 @@ const createMarket = (marketData) => api.post('/markets', marketData);
 const getUsers = () => api.get('/users');
 const updateUser = (id, userData) => api.put(`/users/${id}`, userData);
 const deleteUser = (id) => api.delete(`/users/${id}`);
+// New function to get the logged-in user's profile - let's assume the backend provides a '/profile' route
+const getMyProfile = () => api.get('/auth/profile'); // Corrected to a more likely endpoint
 
 const uploadShopOwners = (formData) => {
   return api.post('/users/upload', formData, {
@@ -58,14 +60,15 @@ const uploadShopOwners = (formData) => {
   });
 };
 
-// New function for uploading products from a shop owner
 const uploadProducts = (formData) => {
-  // This assumes a backend endpoint like POST /api/products/upload
   return api.post('/products/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 };
 
+// == REPORT SERVICES ==
+const getMyReports = () => api.get('/reports/myreports');
+const createPriceReport = (reportData) => api.post('/reports', reportData);
 
 // --- Export all functions ---
 export {
@@ -79,8 +82,11 @@ export {
   getUsers,
   updateUser,
   deleteUser,
+  getMyProfile,
   uploadShopOwners,
   uploadProducts,
+  getMyReports,
+  createPriceReport,
 };
 
 

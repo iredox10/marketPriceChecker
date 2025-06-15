@@ -5,6 +5,7 @@ import {
   getPendingReports,
   approvePriceReport,
   rejectPriceReport,
+  getMyReports
 } from '../controllers/priceReportController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -21,6 +22,10 @@ router.route('/pending').get(protect, admin, getPendingReports);
 // @route   PUT /api/reports/:id/approve
 // @desc    Admin approves a report
 router.route('/:id/approve').put(protect, admin, approvePriceReport);
+
+// @route   GEt /api/reports/:id/approve
+// @desc    Admin approves a report
+router.route('/myreports').get(protect, getMyReports);
 
 // @route   DELETE /api/reports/:id
 // @desc    Admin rejects (deletes) a report

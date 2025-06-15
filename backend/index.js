@@ -10,8 +10,8 @@ import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 // --- Import Route Files ---
 import authRoutes from './routes/authRoutes.js';
 import marketRoutes from './routes/marketRoutes.js';
-import productRoutes from './routes/productRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import productRoutes from './routes/productRoutes.js';
 import priceReportRoutes from './routes/priceReportRoutes.js';
 
 // --- Initial Configuration ---

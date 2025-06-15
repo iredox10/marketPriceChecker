@@ -6,11 +6,9 @@ import { login } from '../services/api';
 
 /**
  * LoginPage Component
- * A versatile login page for both Admins and Shop Owners.
+ * A single login page for all user roles.
  */
 const LoginPage = () => {
-  // State to toggle between 'Admin' and 'ShopOwner' roles
-  const [role, setRole] = useState('ShopOwner'); // Default role
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,19 +32,12 @@ const LoginPage = () => {
       // Call the login API service
       const { data } = await login(email, password);
 
-      // Important: Check if the role matches the selected tab
-      if (data.role !== role) {
-        setError(`You are not registered as a ${role}. Please select the correct role.`);
-        setIsLoading(false);
-        return;
-      }
-
       // Save user info to localStorage to persist login state
       localStorage.setItem('userInfo', JSON.stringify(data));
 
       setIsLoading(false);
 
-      // Redirect user based on their role
+      // Redirect user based on their role from the backend
       if (data.role === 'Admin') {
         navigate('/admin/dashboard');
       } else if (data.role === 'ShopOwner') {
@@ -63,6 +54,7 @@ const LoginPage = () => {
         : 'Login failed. Please check your credentials.';
       setError(message);
       setIsLoading(false);
+      console.log(err)
     }
   };
 
@@ -79,24 +71,6 @@ const LoginPage = () => {
               create a new account
             </Link>
           </p>
-        </div>
-
-        {/* Role Switcher */}
-        <div className="flex justify-center bg-gray-100 rounded-full p-1">
-          <button
-            onClick={() => setRole('ShopOwner')}
-            className={`w-full py-2 rounded-full text-sm font-medium transition-colors duration-300 ${role === 'ShopOwner' ? 'bg-green-600 text-white shadow' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-          >
-            Shop Owner
-          </button>
-          <button
-            onClick={() => setRole('Admin')}
-            className={`w-full py-2 rounded-full text-sm font-medium transition-colors duration-300 ${role === 'Admin' ? 'bg-green-600 text-white shadow' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-          >
-            Admin
-          </button>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>

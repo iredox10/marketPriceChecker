@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+// Import the register function from our API service
+import { register } from '../../services/api';
 
 /**
  * RegistrationPage Component
@@ -25,7 +27,7 @@ const RegistrationPage = () => {
   /**
    * Handles the form submission for user registration.
    */
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -35,16 +37,32 @@ const RegistrationPage = () => {
     }
 
     setIsLoading(true);
-    console.log('Registering user with data:', formData);
 
-    // --- MOCK API CALL ---
-    // In a real application, you would send this data to your backend API.
-    setTimeout(() => {
+    try {
+      // Call the register API service
+      const { data } = await register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        // The backend will default the role to 'User'
+      });
+
+      // --- KEY CHANGE ---
+      // Automatically log the user in by saving their info
+      localStorage.setItem('userInfo', JSON.stringify(data));
+
       setIsLoading(false);
-      alert(`Welcome, ${formData.name}! Your account has been created successfully. Please log in.`);
-      // Redirect user to the login page after successful registration
-      navigate('/login');
-    }, 1500);
+
+      // Redirect user to their new profile page
+      navigate('/profile');
+
+    } catch (err) {
+      const message = err.response && err.response.data.message
+        ? err.response.data.message
+        : 'Registration failed. Please try again.';
+      setError(message);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -63,6 +81,11 @@ const RegistrationPage = () => {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleRegister}>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative text-center" role="alert">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
           <div className="rounded-md shadow-sm space-y-4">
             <input
               name="name"
@@ -105,10 +128,6 @@ const RegistrationPage = () => {
               placeholder="Confirm Password"
             />
           </div>
-
-          {error && (
-            <p className="text-sm text-red-600 text-center">{error}</p>
-          )}
 
           <div>
             <button

@@ -1,17 +1,16 @@
 
-import User from '../models/User.js'
-import jwt from 'jsonwebtoken'
+import User from '../models/User.js';
+import jwt from 'jsonwebtoken';
 
 // --- Helper Function to Generate JWT ---
 const generateToken = (id, role) => {
-  // The JWT_SECRET should be in your .env file
-  return jwt.sign({ id, role }, process.env.JWT_SECRET || "secret", {
-    expiresIn: '30d', // Token expires in 30 days
+  return jwt.sign({ id, role }, process.env.JWT_SECRET || 'secret', {
+    expiresIn: '30d',
   });
 };
 
 /**
- * @desc    Register a new user (User, ShopOwner, or Admin)
+ * @desc    Register a new user
  * @route   POST /api/auth/register
  * @access  Public
  */
@@ -19,31 +18,28 @@ export const registerUser = async (req, res) => {
   const { name, email, password, role, shopName, market } = req.body;
 
   try {
-    // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Create a new user instance
     const user = new User({
       name,
       email,
-      password, // Password will be hashed by the pre-save hook in the model
+      password,
       role,
       shopName: role === 'ShopOwner' ? shopName : undefined,
       market: role === 'ShopOwner' ? market : undefined,
     });
 
-    // Save the user to the database
     await user.save();
 
-    // Respond with user data and a token
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
+      market: user.market,
       token: generateToken(user._id, user.role),
     });
 
@@ -61,16 +57,15 @@ export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Find user by email
     const user = await User.findOne({ email });
 
-    // Check if user exists and if password matches
     if (user && (await user.comparePassword(password))) {
       res.json({
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
+        market: user.market, // Send market ID on login for shop owners
         token: generateToken(user._id, user.role),
       });
     } else {
@@ -78,5 +73,26 @@ export const loginUser = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: 'Server error during login', error: error.message });
+  }
+};
+
+
+/**
+ * @desc    Get user profile
+ * @route   GET /api/auth/profile
+ * @access  Private
+ */
+export const getUserProfile = async (req, res) => {
+  try {
+    // req.user is attached by the 'protect' middleware after token verification
+    const user = await User.findById(req.user._id).select('-password');
+
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
