@@ -1,74 +1,100 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+// Import the useAuth hook
+import { useAuth } from '../context/AuthContext';
 
-// In a real project, this would be src/components/Icons.jsx
-// It centralizes all icons for easy management.
-export const FiMenuIcon = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>);
-export const FiXIcon = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>);
-export const FiSearchIcon = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>);
-export const FaStoreIcon = (props) => (<svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 576 512" {...props}><path d="M567.4 329.9c-2.8-3.4-6.8-5.9-11.4-5.9H312c-4.6 0-8.6 2.5-11.4 5.9l-23.7 29.6c-4.3 5.3-11.7 6.4-17.4 2.8L209 332.6c-5.7-3.6-13.1-2.5-17.4 2.8l-23.7 29.6c-2.8 3.4-6.8 5.9-11.4 5.9H10c-5.5 0-10 4.5-10 10v96c0 17.7 14.3 32 32 32h512c17.7 0 32-14.3 32-32v-96c0-5.5-4.5-10-10-10zM144 416c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm320 0c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zM576 64H352V32c0-17.7-14.3-32-32-32H256c-17.7 0-32 14.3-32 32v32H0v192h576V64z"></path></svg>);
-export const FaUsersIcon = (props) => (<svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 640 512" {...props}><path d="M96 224c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm448 0c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm32 32h-64c-17.7 0-32 14.3-32 32v160h128V288c0-17.7-14.3-32-32-32zm-320 0H128c-17.7 0-32 14.3-32 32v160h128V288c0-17.7-14.3-32-32-32zM480 224c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64zm-192 64c-17.7 0-32 14.3-32 32v128h64V320c0-17.7-14.3-32-32-32zM320 96c35.3 0 64-28.7 64-64s-28.7-64-64-64-64 28.7-64 64 28.7 64 64 64z"></path></svg>);
+// --- ICONS ---
+const FiMenu = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" {...props}><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>);
+const FiX = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>);
+const FiUser = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" {...props}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>);
+const FiLogOut = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" {...props}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>);
+const FiLayout = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>);
 
 
-// This would be src/components/Header.jsx
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const location = useLocation();
+  // Get auth state and functions from the context
+  const { userInfo, logout } = useAuth();
 
-  // Effect to close the mobile menu automatically when the route changes
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  const location = useLocation();
+  const profileMenuRef = useRef(null);
+
+  // Close mobile menu on route change
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logout(); // Call the logout function from context
+    setIsProfileMenuOpen(false);
+  };
+
+  const getDashboardLink = () => {
+    if (!userInfo) return '/';
+    switch (userInfo.role) {
+      case 'Admin': return '/admin/dashboard';
+      case 'ShopOwner': return '/shop-owner/dashboard';
+      default: return '/profile';
+    }
+  };
+
   return (
-    <header className="bg-white/90 backdrop-blur-md shadow-sm fixed w-full top-0 z-50">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold text-gray-800">KanoPrice<span className="text-green-600">Checker</span></Link>
+    <header className="bg-white/80 backdrop-blur-md shadow-sm fixed w-full top-0 z-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
+          <div className="flex-shrink-0">
+            <Link to="/" className="text-2xl font-bold text-gray-800">KanoPrice<span className="text-green-600">Checker</span></Link>
+          </div>
           <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-600 hover:text-green-600 transition-colors">Home</Link>
-            <Link to="/about" className="text-gray-600 hover:text-green-600 transition-colors">About</Link>
+            <Link to="/" className="text-gray-600 hover:text-green-600">Home</Link>
+            <Link to="/markets" className="text-gray-600 hover:text-green-600">Markets</Link>
+            <Link to="/about" className="text-gray-600 hover:text-green-600">About</Link>
           </nav>
+          <div className="hidden md:block">
+            {userInfo ? (
+              <div className="relative" ref={profileMenuRef}>
+                <button onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 p-2 rounded-full">
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">{userInfo.name.charAt(0).toUpperCase()}</div>
+                  <span className="text-sm font-medium text-gray-700 pr-2">{userInfo.name}</span>
+                </button>
+                {isProfileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
+                    <Link to={getDashboardLink()} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><FiLayout className="mr-3 h-5 w-5" /> Dashboard</Link>
+                    <Link to="/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><FiUser className="mr-3 h-5 w-5" /> My Profile</Link>
+                    <button onClick={handleLogout} className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100"><FiLogOut className="mr-3 h-5 w-5" /> Logout</button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to="/login" className="px-5 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">Login</Link>
+            )}
+          </div>
           <div className="md:hidden">
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-gray-600 focus:outline-none" aria-label="Open menu">
-              {isMenuOpen ? <FiXIcon className="w-6 h-6" /> : <FiMenuIcon className="w-6 h-6" />}
-            </button>
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 rounded-md"><FiMenu className="w-6 h-6" /></button>
           </div>
         </div>
-        {isMenuOpen && (
-          <nav className="md:hidden mt-4">
-            <Link to="/" className="block py-2 text-gray-600 hover:text-green-600">Home</Link>
-            <Link to="/about" className="block py-2 text-gray-600 hover:text-green-600">About</Link>
-          </nav>
-        )}
       </div>
+      {isMenuOpen && (
+        <nav className="md:hidden bg-white border-t p-4 space-y-2">
+          {/* Mobile menu links */}
+        </nav>
+      )}
     </header>
   );
 };
-export default Header; // This line is conventionally at the end of the file
 
-// This would be src/components/Footer.jsx
-export const Footer = () => {
-  const [time, setTime] = useState(new Date());
-
-  // Effect to update the time every second
-  useEffect(() => {
-    const timerId = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timerId); // Cleanup interval on component unmount
-  }, []);
-
-  // Format time for the Nigerian timezone
-  const nigerianTime = time.toLocaleTimeString('en-NG', { timeZone: 'Africa/Lagos', hour: '2-digit', minute: '2-digit' });
-
-  return (
-    <footer className="bg-gray-800 text-white">
-      <div className="container mx-auto px-6 py-8 text-center">
-        <p>&copy; {new Date().getFullYear()} Kano Price Checker. All rights reserved.</p>
-        <p className="text-sm text-gray-400 mt-2">
-          Made with <span className="text-red-500">&hearts;</span> in Kano. Current time in Nigeria: {nigerianTime}
-        </p>
-      </div>
-    </footer>
-  );
-};
+export default Header;
