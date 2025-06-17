@@ -1,27 +1,46 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+// Import the API service function
+import { getMarkets } from '../../services/api';
 
 // --- ICONS ---
 const FiChevronRight = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="9 18 15 12 9 6"></polyline></svg>);
 const FiSearch = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>);
 
-// --- Mock Data ---
-const mockMarkets = [
-  { id: 'kasuwar-rimi', name: 'Kasuwar Rimi', location: 'Rimi, Kano', description: 'Known for its vast selection of grains and fresh produce.', shopOwnerCount: 45 },
-  { id: 'sabon-gari', name: 'Sabon Gari Market', location: 'Sabon Gari, Kano', description: 'A bustling market famous for electronics, textiles, and diverse food items.', shopOwnerCount: 62 },
-  { id: 'yankura', name: 'Yankura Market', location: 'Yankura, Kano', description: 'Specializes in perishable goods like fruits, vegetables, and spices.', shopOwnerCount: 28 },
-  { id: 'kantin-kwari', name: 'Kantin Kwari', location: 'Kwari, Kano', description: 'West Africa\'s largest textile market, also featuring food sections.', shopOwnerCount: 15 },
-];
-
 /**
  * MarketListPage Component
- * Displays a searchable and filterable list of all available markets.
+ * Displays a searchable and filterable list of all available markets fetched from the backend.
  */
 const MarketListPage = () => {
+  const [markets, setMarkets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState('');
 
-  const filteredMarkets = mockMarkets.filter(market =>
+  useEffect(() => {
+    const fetchMarkets = async () => {
+      try {
+        const { data } = await getMarkets();
+        // In a real app, the shopOwnerCount would come from the backend.
+        // We'll add a placeholder count for now.
+        const marketsWithCount = data.map(market => ({
+          ...market,
+          shopOwnerCount: Math.floor(Math.random() * 50) + 10 // Placeholder
+        }));
+        setMarkets(marketsWithCount);
+      } catch (err) {
+        console.error("Error fetching markets:", err);
+        setError("Could not load markets. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMarkets();
+  }, []);
+
+  const filteredMarkets = markets.filter(market =>
     market.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     market.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -50,10 +69,14 @@ const MarketListPage = () => {
         </div>
 
         {/* Markets Grid */}
-        {filteredMarkets.length > 0 ? (
+        {isLoading ? (
+          <div className="text-center py-16">Loading markets...</div>
+        ) : error ? (
+          <div className="text-center py-16 text-red-500">{error}</div>
+        ) : filteredMarkets.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredMarkets.map(market => (
-              <div key={market.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between">
+              <div key={market._id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">{market.name}</h2>
                   <p className="text-sm font-semibold text-green-600 mb-2">{market.location}</p>
@@ -62,7 +85,7 @@ const MarketListPage = () => {
                 <div className="flex justify-between items-center mt-4">
                   <p className="text-xs text-gray-500">{market.shopOwnerCount} registered shops</p>
                   <Link
-                    to={`/markets/${market.id}`}
+                    to={`/markets/${market._id}`}
                     className="inline-flex items-center text-sm font-medium text-green-600 hover:text-green-800"
                   >
                     View Market <FiChevronRight className="ml-1 h-4 w-4" />

@@ -46,6 +46,7 @@ const addProductPrice = (productId, priceData) => api.post(`/products/${productI
 // == MARKET SERVICES ==
 const getMarkets = () => api.get('/markets');
 const createMarket = (marketData) => api.post('/markets', marketData);
+const getMarketById = (id) => api.get(`/markets/${id}`); // Added this function
 
 // == USER/ADMIN SERVICES ==
 const getUsers = () => api.get('/users');
@@ -87,6 +88,7 @@ export {
   uploadProducts,
   getMyReports,
   createPriceReport,
+  getMarketById
 };
 
 

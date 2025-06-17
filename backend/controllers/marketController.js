@@ -1,5 +1,6 @@
 
-import Market from '../models/Market.js'
+import Market from '../models/Market.js';
+import User from '../models/User.js'; // Import the User model
 
 // @desc    Create a new market
 // @route   POST /api/markets
@@ -26,18 +27,32 @@ export const getAllMarkets = async (req, res) => {
   }
 };
 
-// @desc    Get a single market by ID
-// @route   GET /api/markets/:id
-// @access  Public
-export const getMarketById = async (req, res) => {
+/**
+ * @desc    Get a single market by ID, including its shop owners
+ * @route   GET /api/markets/:id
+ * @access  Public
+ */
+export const getMarketById = async (req, res, next) => {
   try {
+    // Find the market by its ID
     const market = await Market.findById(req.params.id);
+
     if (market) {
-      res.json(market);
+      // If the market is found, find all users who are ShopOwners in that market
+      const shopOwners = await User.find({ market: market._id, role: 'ShopOwner' }).select('name shopName');
+
+      // In a real app, you would also fetch popular/recent products for this market.
+      // For now, we'll just send back the market and its shop owners.
+
+      res.json({
+        ...market.toObject(),
+        shopOwners: shopOwners,
+      });
     } else {
-      res.status(404).json({ message: 'Market not found' });
+      res.status(404);
+      throw new Error('Market not found');
     }
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching market', error: error.message });
+    next(error);
   }
 };
