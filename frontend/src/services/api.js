@@ -67,9 +67,14 @@ const uploadProducts = (formData) => {
   });
 };
 
+
 // == REPORT SERVICES ==
 const getMyReports = () => api.get('/reports/myreports');
 const createPriceReport = (reportData) => api.post('/reports', reportData);
+// New functions for admin to manage reports
+const getPendingReports = () => api.get('/reports/pending');
+const approveReport = (id) => api.put(`/reports/${id}/approve`);
+const rejectReport = (id) => api.delete(`/reports/${id}`);
 
 // --- Export all functions ---
 export {
@@ -88,7 +93,10 @@ export {
   uploadProducts,
   getMyReports,
   createPriceReport,
-  getMarketById
+  getMarketById,
+  getPendingReports,
+  approveReport,
+  rejectReport
 };
 
 

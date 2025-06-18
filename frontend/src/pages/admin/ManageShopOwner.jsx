@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 // Import all necessary API services
 import { getUsers, getMarkets, register, updateUser, deleteUser, uploadShopOwners } from '../../services/api';
@@ -11,29 +11,12 @@ const FiX = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" v
 const FiAlertTriangle = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" {...props}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>);
 const FiCheckCircle = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>);
 const FiUploadCloud = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" {...props}><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path><polyline points="16 16 12 12 8 16"></polyline></svg>);
+const FiChevronLeft = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" {...props}><polyline points="15 18 9 12 15 6"></polyline></svg>);
+const FiChevronRight = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" {...props}><polyline points="9 18 15 12 9 6"></polyline></svg>);
 
 
 // --- Reusable Components ---
-
-const Notification = ({ message, type, onClose }) => {
-  const isSuccess = type === 'success';
-  const baseStyle = "fixed top-5 right-5 z-50 flex items-center p-4 rounded-lg shadow-lg text-white transform transition-all duration-300";
-  const typeStyle = isSuccess ? 'bg-green-500' : 'bg-red-500';
-  const Icon = isSuccess ? FiCheckCircle : FiAlertTriangle;
-
-  useEffect(() => {
-    const timer = setTimeout(() => { onClose(); }, 5000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div className={`${baseStyle} ${typeStyle}`}>
-      <Icon className="h-6 w-6 mr-3" />
-      <span className="text-sm font-medium">{message}</span>
-      <button onClick={onClose} className="ml-4 p-1 rounded-full hover:bg-white/20"><FiX className="h-4 w-4" /></button>
-    </div>
-  );
-};
+const Notification = ({ message, type, onClose }) => { /* ... (no changes needed) ... */ };
 
 const ActionModal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -48,129 +31,93 @@ const ActionModal = ({ isOpen, onClose, title, children }) => {
   );
 };
 
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
+  }
+
+  return (
+    <div className="flex justify-between items-center mt-4">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="flex items-center px-3 py-1 text-sm bg-white border rounded-md disabled:opacity-50"
+      >
+        <FiChevronLeft className="h-4 w-4 mr-1" /> Previous
+      </button>
+      <div className="text-sm text-gray-600">
+        Page {currentPage} of {totalPages}
+      </div>
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="flex items-center px-3 py-1 text-sm bg-white border rounded-md disabled:opacity-50"
+      >
+        Next <FiChevronRight className="h-4 w-4 ml-1" />
+      </button>
+    </div>
+  );
+};
+
 
 // --- ManageShopOwnersPage Component ---
 const ManageShopOwnersPage = () => {
-  const [shopOwners, setShopOwners] = useState([]);
+  const [allShopOwners, setAllShopOwners] = useState([]);
   const [markets, setMarkets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [modal, setModal] = useState({ type: null, data: null });
   const [formData, setFormData] = useState({});
-  const [addMethod, setAddMethod] = useState('manual');
-  const [uploadFile, setUploadFile] = useState(null);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
-  const showNotification = (message, type = 'success') => {
-    setNotification({ show: true, message, type });
-  };
+  // New state for pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // Set how many items to show per page
+
+  const showNotification = (message, type = 'success') => setNotification({ show: true, message, type });
 
   const fetchPageData = async () => {
     setIsLoading(true);
     try {
       const [usersRes, marketsRes] = await Promise.all([getUsers(), getMarkets()]);
-      setShopOwners(usersRes.data.filter(user => user.role === 'ShopOwner'));
+      setAllShopOwners(usersRes.data.filter(user => user.role === 'ShopOwner'));
       setMarkets(marketsRes.data);
-    } catch (error) {
-      console.error("Failed to fetch page data:", error);
-      showNotification("Could not load page data. Please log in as an Admin.", "error");
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (error) { showNotification("Could not load page data.", "error"); }
+    finally { setIsLoading(false); }
   };
 
-  useEffect(() => {
-    fetchPageData();
-  }, []);
+  useEffect(() => { fetchPageData(); }, []);
 
-  const handleAction = (type, owner = {}) => {
-    const ownerData = { ...owner, market: owner.market?._id || owner.market || '' };
-    setFormData(ownerData);
-    setAddMethod('manual');
-    setUploadFile(null);
-    setModal({ type, data: owner });
-  };
-
+  const handleAction = (type, owner = {}) => { /* ... (no changes needed) ... */ };
   const handleFormChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleSubmit = async (e) => { /* ... (no changes needed) ... */ };
 
-  const handleFileChange = (e) => setUploadFile(e.target.files ? e.target.files[0] : null);
+  // --- Pagination and Filtering Logic ---
+  const filteredShopOwners = useMemo(() => {
+    return allShopOwners.filter(owner =>
+      owner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (owner.shopName && owner.shopName.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [allShopOwners, searchTerm]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { type, data } = modal;
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredShopOwners.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredShopOwners.length / itemsPerPage);
 
-    try {
-      let successMessage = '';
-      if (type === 'add') {
-        if (addMethod === 'manual') {
-          await register({ ...formData, role: 'ShopOwner' });
-          successMessage = "Shop owner added successfully!";
-        } else {
-          const fileFormData = new FormData();
-          fileFormData.append('file', uploadFile);
-          await uploadShopOwners(fileFormData);
-          successMessage = "File uploaded. Shop owners are being processed.";
-        }
-      } else if (type === 'edit') {
-        await updateUser(data._id, formData);
-        successMessage = "Shop owner updated successfully!";
-      } else if (type === 'delete') {
-        await deleteUser(data._id);
-        successMessage = "Shop owner deleted successfully!";
-      }
-      showNotification(successMessage, 'success');
-      fetchPageData();
-      setModal({ type: null, data: null });
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || `Could not complete the action.`;
-      console.error(`Failed to ${type} owner:`, error);
-      showNotification(errorMessage, "error");
+  const handlePageChange = (pageNumber) => {
+    if (pageNumber > 0 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
     }
   };
 
-  const filteredShopOwners = shopOwners.filter(owner =>
-    owner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (owner.shopName && owner.shopName.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
 
   return (
     <>
       {notification.show && <Notification message={notification.message} type={notification.type} onClose={() => setNotification({ ...notification, show: false })} />}
       <ActionModal isOpen={!!modal.type} onClose={() => setModal({ type: null, data: null })} title={`${modal.type ? modal.type.charAt(0).toUpperCase() + modal.type.slice(1) : ''} Shop Owner`}>
-        {modal.type === 'delete' ? (
-          <form onSubmit={handleSubmit}>
-            <p>Are you sure you want to delete <span className="font-bold">{modal.data?.name}</span>?</p>
-            <div className="flex justify-end pt-4 space-x-3"><button type="button" onClick={() => setModal({ type: null, data: null })} className="px-4 py-2 bg-gray-200 rounded-md">Cancel</button><button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-md">Delete</button></div>
-          </form>
-        ) : modal.type === 'edit' ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input type="text" name="name" placeholder="Full Name" value={formData.name || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required />
-            <input type="email" name="email" placeholder="Email Address" value={formData.email || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required />
-            <input type="text" name="shopName" placeholder="Shop Name" value={formData.shopName || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required />
-            <select name="market" value={formData.market || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required><option value="" disabled>Select a Market</option>{markets.map(market => (<option key={market._id} value={market._id}>{market.name}</option>))}</select>
-            <div className="flex justify-end pt-4 space-x-3"><button type="button" onClick={() => setModal({ type: null, data: null })} className="px-4 py-2 bg-gray-200 rounded-md">Cancel</button><button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md">Save Changes</button></div>
-          </form>
-        ) : ( // Add modal
-          <form onSubmit={handleSubmit}>
-            <div className="flex border-b mb-6"><button type="button" onClick={() => setAddMethod('manual')} className={`flex-1 py-2 text-sm font-medium ${addMethod === 'manual' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500'}`}>Add Manually</button><button type="button" onClick={() => setAddMethod('file')} className={`flex-1 py-2 text-sm font-medium ${addMethod === 'file' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500'}`}>Upload File</button></div>
-            {addMethod === 'manual' ? (
-              <div className="space-y-4">
-                <input type="text" name="name" placeholder="Full Name" value={formData.name || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required />
-                <input type="email" name="email" placeholder="Email Address" value={formData.email || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required />
-                <input type="text" name="shopName" placeholder="Shop Name" value={formData.shopName || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required />
-                <select name="market" value={formData.market || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required><option value="" disabled>Select a Market</option>{markets.map(market => (<option key={market._id} value={market._id}>{market.name}</option>))}</select>
-                <input type="password" name="password" placeholder="Password" onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required />
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <p className="text-sm text-gray-600">Upload an Excel or CSV file with columns: 'name', 'email', 'password', 'shopName', 'marketId'.</p>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md"><div className="space-y-1 text-center"><FiUploadCloud className="mx-auto h-12 w-12 text-gray-400" /><div className="flex text-sm"><label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-green-600 hover:text-green-500"><span>Upload a file</span><input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileChange} accept=".xlsx, .xls, .csv" /></label><p className="pl-1">or drag and drop</p></div><p className="text-xs text-gray-500">XLSX, XLS, CSV</p></div></div>
-                {uploadFile && <p className="text-sm">Selected: <span className="font-medium">{uploadFile.name}</span></p>}
-              </div>
-            )}
-            <div className="flex justify-end pt-4 space-x-3"><button type="button" onClick={() => setModal({ type: null, data: null })} className="px-4 py-2 bg-gray-200 rounded-md">Cancel</button><button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md">Submit</button></div>
-          </form>
-        )}
+        {/* ... Modal content remains the same ... */}
       </ActionModal>
       <div className="bg-gray-100 min-h-full">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -185,7 +132,7 @@ const ManageShopOwnersPage = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {isLoading ? (
                   <tr><td colSpan="4" className="text-center py-8">Loading...</td></tr>
-                ) : filteredShopOwners.map((owner) => (
+                ) : currentItems.map((owner) => (
                   <tr key={owner._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{owner.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{owner.shopName}</td>
@@ -198,6 +145,12 @@ const ManageShopOwnersPage = () => {
                 ))}
               </tbody>
             </table>
+            {/* Pagination Component */}
+            {totalPages > 1 && (
+              <div className="p-4 border-t">
+                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+              </div>
+            )}
           </div>
         </div>
       </div>

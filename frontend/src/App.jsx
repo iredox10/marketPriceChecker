@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 // Import the new AuthProvider
@@ -22,6 +21,7 @@ import ManageShopOwnersPage from './pages/admin/ManageShopOwner.jsx';
 import ViewAllProductsPage from './pages/admin/Products.jsx';
 import ShopOwnerDashboardPage from './pages/shopowner/Dashboard.jsx';
 import NotFoundPage from './pages/NotFoundPage';
+import AdminPriceReportsPage from './pages/admin/AdminPriceReportPage.jsx';
 
 /**
  * The main App component.
@@ -42,11 +42,12 @@ const App = () => {
               <Route path="/register" element={<RegistrationPage />} />
               <Route path="/profile" element={<UserProfilePage />} />
               <Route path="/search" element={<SearchResultsPage />} />
-              <Route path="/markets" element={<MarketListPage />} />
+              <Route path="/market-list" element={<MarketListPage />} />
               <Route path="/markets/:marketId" element={<MarketDetailPage />} />
               <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
               <Route path="/admin/manage-shop-owners" element={<ManageShopOwnersPage />} />
               <Route path="/admin/view-all-products" element={<ViewAllProductsPage />} />
+              <Route path="/admin/price-reports" element={<AdminPriceReportsPage />} />
               <Route path="/shop-owner/dashboard" element={<ShopOwnerDashboardPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
