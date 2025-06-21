@@ -5,12 +5,13 @@ import {
   getPendingReports,
   approvePriceReport,
   rejectPriceReport,
-  getMyReports
+  getMyReports,
+  getPublicReports
 } from '../controllers/priceReportController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
-
+router.route('/public').get(getPublicReports);
 // @route   POST /api/reports
 // @desc    A logged-in user submits a new report
 router.route('/').post(protect, createPriceReport);

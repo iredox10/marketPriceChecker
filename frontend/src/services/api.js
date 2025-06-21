@@ -71,10 +71,13 @@ const uploadProducts = (formData) => {
 // == REPORT SERVICES ==
 const getMyReports = () => api.get('/reports/myreports');
 const createPriceReport = (reportData) => api.post('/reports', reportData);
+const getPublicReports = (params) => api.get('/reports/public', { params });
 // New functions for admin to manage reports
 const getPendingReports = () => api.get('/reports/pending');
 const approveReport = (id) => api.put(`/reports/${id}/approve`);
 const rejectReport = (id) => api.delete(`/reports/${id}`);
+
+const getShopDetails = (id) => api.get(`/users/shop/${id}`);
 
 // --- Export all functions ---
 export {
@@ -93,10 +96,12 @@ export {
   uploadProducts,
   getMyReports,
   createPriceReport,
+  getPublicReports,
   getMarketById,
   getPendingReports,
   approveReport,
-  rejectReport
+  rejectReport,
+  getShopDetails
 };
 
 

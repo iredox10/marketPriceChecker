@@ -16,7 +16,11 @@ const FiChevronRight = (props) => (<svg stroke="currentColor" fill="none" stroke
 
 
 // --- Reusable Components ---
-const Notification = ({ message, type, onClose }) => { /* ... (no changes needed) ... */ };
+const Notification = ({ message, type, onClose }) => {
+  useEffect(() => { const timer = setTimeout(() => onClose(), 5000); return () => clearTimeout(timer); }, [onClose]);
+  const isSuccess = type === 'success';
+  return (<div className={`fixed top-5 right-5 z-50 flex items-center p-4 rounded-lg shadow-lg text-white ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`}><span className="text-sm font-medium">{message}</span><button onClick={onClose} className="ml-4 p-1 rounded-full hover:bg-white/20"><FiX className="h-4 w-4" /></button></div>);
+};
 
 const ActionModal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -32,11 +36,7 @@ const ActionModal = ({ isOpen, onClose, title, children }) => {
 };
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-  const pageNumbers = [];
-  for (let i = 1; i <= totalPages; i++) {
-    pageNumbers.push(i);
-  }
-
+  if (totalPages <= 1) return null;
   return (
     <div className="flex justify-between items-center mt-4">
       <button
@@ -66,14 +66,15 @@ const ManageShopOwnersPage = () => {
   const [allShopOwners, setAllShopOwners] = useState([]);
   const [markets, setMarkets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [modal, setModal] = useState({ type: null, data: null });
   const [formData, setFormData] = useState({});
+  const [addMethod, setAddMethod] = useState('manual');
+  const [uploadFile, setUploadFile] = useState(null);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
-
-  // New state for pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10); // Set how many items to show per page
+  const [itemsPerPage] = useState(10);
 
   const showNotification = (message, type = 'success') => setNotification({ show: true, message, type });
 
@@ -83,17 +84,62 @@ const ManageShopOwnersPage = () => {
       const [usersRes, marketsRes] = await Promise.all([getUsers(), getMarkets()]);
       setAllShopOwners(usersRes.data.filter(user => user.role === 'ShopOwner'));
       setMarkets(marketsRes.data);
-    } catch (error) { showNotification("Could not load page data.", "error"); }
+    } catch (error) { showNotification("Could not load page data. Please log in as an Admin.", "error"); }
     finally { setIsLoading(false); }
   };
 
   useEffect(() => { fetchPageData(); }, []);
 
-  const handleAction = (type, owner = {}) => { /* ... (no changes needed) ... */ };
-  const handleFormChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  const handleSubmit = async (e) => { /* ... (no changes needed) ... */ };
+  const handleAction = (type, owner = {}) => {
+    const ownerData = { ...owner, market: owner.market?._id || owner.market || '' };
+    setFormData(ownerData);
+    setAddMethod('manual');
+    setUploadFile(null);
+    setModal({ type, data: owner });
+  };
 
-  // --- Pagination and Filtering Logic ---
+  const handleFormChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleFileChange = (e) => setUploadFile(e.target.files ? e.target.files[0] : null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const { type, data } = modal;
+
+    try {
+      let successMessage = '';
+      if (type === 'add') {
+        if (addMethod === 'manual') {
+          const res = await register({ ...formData, role: 'ShopOwner' });
+          successMessage = "Shop owner added successfully!";
+          console.log(res.data)
+        } else {
+          if (!uploadFile) throw new Error("Please select a file to upload.");
+          const fileFormData = new FormData();
+          fileFormData.append('file', uploadFile);
+          const res = await uploadShopOwners(fileFormData);
+          console.log(res.data)
+          successMessage = res.data.message;
+        }
+      } else if (type === 'edit') {
+        await updateUser(data._id, formData);
+        successMessage = "Shop owner updated successfully!";
+      } else if (type === 'delete') {
+        await deleteUser(data._id);
+        successMessage = "Shop owner deleted successfully!";
+      }
+      showNotification(successMessage, 'success');
+      fetchPageData();
+      setModal({ type: null, data: null });
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || `Could not complete the action.`;
+      showNotification(errorMessage, "error");
+      console.log(error)
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const filteredShopOwners = useMemo(() => {
     return allShopOwners.filter(owner =>
       owner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -105,19 +151,56 @@ const ManageShopOwnersPage = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredShopOwners.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredShopOwners.length / itemsPerPage);
-
-  const handlePageChange = (pageNumber) => {
-    if (pageNumber > 0 && pageNumber <= totalPages) {
-      setCurrentPage(pageNumber);
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
     }
+  };
+
+  const renderModalContent = () => {
+    const { type } = modal;
+    if (type === 'delete') {
+      return (
+        <form onSubmit={handleSubmit}>
+          <p>Are you sure you want to delete <span className="font-bold">{modal.data?.name}</span>?</p>
+          <div className="flex justify-end pt-4 space-x-3"><button type="button" onClick={() => setModal({ type: null, data: null })} className="px-4 py-2 bg-gray-200 rounded-md">Cancel</button><button type="submit" className="px-4 py-2 bg-red-600 text-white rounded-md" disabled={isSubmitting}>{isSubmitting ? 'Deleting...' : 'Delete'}</button></div>
+        </form>
+      );
+    }
+    if (type === 'edit' || type === 'add') {
+      return (
+        <form onSubmit={handleSubmit}>
+          {type === 'add' && (
+            <div className="flex border-b mb-6"><button type="button" onClick={() => setAddMethod('manual')} className={`flex-1 py-2 text-sm font-medium ${addMethod === 'manual' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500'}`}>Add Manually</button><button type="button" onClick={() => setAddMethod('file')} className={`flex-1 py-2 text-sm font-medium ${addMethod === 'file' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500'}`}>Upload File</button></div>
+          )}
+          {addMethod === 'manual' || type === 'edit' ? (
+            <div className="space-y-4">
+              <input type="text" name="name" placeholder="Full Name" value={formData.name || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required />
+              <input type="email" name="email" placeholder="Email Address" value={formData.email || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required />
+              <input type="text" name="shopName" placeholder="Shop Name" value={formData.shopName || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required />
+              <select name="market" value={formData.market || ''} onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required><option value="" disabled>Select a Market</option>{markets.map(market => (<option key={market._id} value={market._id}>{market.name}</option>))}</select>
+              {type === 'add' && <input type="password" name="password" placeholder="Password" onChange={handleFormChange} className="w-full px-3 py-2 border rounded-md" required />}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <p className="text-sm text-gray-600">Upload a file with columns: 'name', 'email', 'password', 'shopName', 'marketId'.</p>
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md"><div className="space-y-1 text-center"><FiUploadCloud className="mx-auto h-12 w-12 text-gray-400" /><div className="flex text-sm"><label htmlFor="file-upload" className="cursor-pointer font-medium text-green-600"><span>Upload a file</span><input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileChange} accept=".xlsx, .xls, .csv" /></label><p className="pl-1">or drag and drop</p></div></div></div>
+              {uploadFile && <p className="text-sm">Selected: <span className="font-medium">{uploadFile.name}</span></p>}
+            </div>
+          )}
+          <div className="flex justify-end pt-4 space-x-3"><button type="button" onClick={() => setModal({ type: null, data: null })} className="px-4 py-2 bg-gray-200 rounded-md">Cancel</button><button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md" disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : 'Submit'}</button></div>
+        </form>
+      );
+    }
+    return null;
   };
 
 
   return (
     <>
-      {notification.show && <Notification message={notification.message} type={notification.type} onClose={() => setNotification({ ...notification, show: false })} />}
+      {notification.show && <Notification message={notification.message} type={notification.type} onClose={() => setNotification({ show: false, message: '', type: 'success' })} />}
       <ActionModal isOpen={!!modal.type} onClose={() => setModal({ type: null, data: null })} title={`${modal.type ? modal.type.charAt(0).toUpperCase() + modal.type.slice(1) : ''} Shop Owner`}>
-        {/* ... Modal content remains the same ... */}
+        {renderModalContent()}
       </ActionModal>
       <div className="bg-gray-100 min-h-full">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -145,7 +228,6 @@ const ManageShopOwnersPage = () => {
                 ))}
               </tbody>
             </table>
-            {/* Pagination Component */}
             {totalPages > 1 && (
               <div className="p-4 border-t">
                 <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />

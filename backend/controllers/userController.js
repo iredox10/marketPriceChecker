@@ -1,5 +1,10 @@
 
 import User from '../models/User.js';
+import Product from '../models/Product.js';
+import xlsx from 'xlsx';
+import crypto from 'crypto';
+
+
 
 /**
  * @desc    Get all users
@@ -81,5 +86,115 @@ export const deleteUser = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: 'Server Error', error: error.message });
+  }
+};
+
+
+
+export const getShopDetailsById = async (req, res, next) => {
+  try {
+    // Find the user and ensure they are a ShopOwner
+    const shopOwner = await User.findById(req.params.id)
+      .select('name shopName market')
+      .populate('market', 'name location');
+
+    if (!shopOwner || shopOwner.role !== 'ShopOwner') {
+      res.status(404);
+      throw new Error('Shop owner not found');
+    }
+
+    // Find all products where this shop owner has a price entry
+    const products = await Product.find({ 'priceHistory.shopOwner': req.params.id })
+      .select('name category averagePrice priceHistory');
+
+    // For each product, extract the latest price from THIS shop owner
+    const productsWithLatestPrice = products.map(p => {
+      const latestEntry = p.priceHistory
+        .filter(h => h.shopOwner.toString() === req.params.id)
+        .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+
+      return {
+        _id: p._id,
+        name: p.name,
+        category: p.category,
+        latestPrice: latestEntry ? latestEntry.price : p.averagePrice,
+        lastUpdated: latestEntry ? latestEntry.date : null,
+      };
+    });
+
+    res.json({
+      shopDetails: shopOwner,
+      products: productsWithLatestPrice,
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Upload and process an Excel file to bulk-create shop owners
+ * @route   POST /api/users/upload
+ * @access  Private/Admin
+ */
+export const uploadShopOwnersFile = async (req, res, next) => {
+  if (!req.file) {
+    res.status(400);
+    return next(new Error('No file uploaded.'));
+  }
+
+  try {
+    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    if (data.length === 0) {
+      res.status(400);
+      throw new Error('The uploaded file is empty.');
+    }
+
+    const createdUsers = [];
+    for (const row of data) {
+      const { name, email, shopName, marketId, password } = row;
+
+      // Basic validation for each row
+      if (!name || !email || !shopName || !marketId) {
+        console.warn('Skipping invalid row:', row);
+        continue;
+      }
+
+      const userExists = await User.findOne({ email });
+      if (userExists) {
+        console.warn(`User with email ${email} already exists. Skipping.`);
+        continue;
+      }
+
+      const marketExists = await Market.findById(marketId);
+      if (!marketExists) {
+        console.warn(`Market with ID ${marketId} not found. Skipping user ${name}.`);
+        continue;
+      }
+
+      const newUser = new User({
+        name,
+        email,
+        shopName,
+        market: marketId,
+        password: password || crypto.randomBytes(16).toString('hex'), // Use provided password or generate one
+        role: 'ShopOwner',
+      });
+
+      const createdUser = await newUser.save();
+      createdUsers.push(createdUser);
+    }
+
+    res.status(201).json({
+      message: `File processed. ${createdUsers.length} new shop owners created.`,
+      createdUsers,
+    });
+
+  } catch (error) {
+    next(error);
   }
 };

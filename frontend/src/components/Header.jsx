@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 // Import the useAuth hook
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo'
 
 // --- ICONS ---
 const FiMenu = (props) => (<svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" {...props}><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>);
@@ -15,6 +16,7 @@ const FiLayout = (props) => (<svg stroke="currentColor" fill="none" strokeWidth=
 const Header = () => {
   // Get auth state and functions from the context
   const { userInfo, logout } = useAuth();
+  console.log(userInfo)
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -57,11 +59,13 @@ const Header = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <div className="flex-shrink-0">
-            <Link to="/" className="text-2xl font-bold text-gray-800">KanoPrice<span className="text-green-600">Checker</span></Link>
+            <Link to="/" className="flex items-center">
+              <Logo className="h-16 w-auto" />
+            </Link>
           </div>
           <nav className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-gray-600 hover:text-green-600">Home</Link>
-            <Link to="/markets" className="text-gray-600 hover:text-green-600">Markets</Link>
+            <Link to="/market-list" className="text-gray-600 hover:text-green-600">Markets</Link>
             <Link to="/about" className="text-gray-600 hover:text-green-600">About</Link>
           </nav>
           <div className="hidden md:block">
@@ -73,8 +77,8 @@ const Header = () => {
                 </button>
                 {isProfileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
-                    <Link to={getDashboardLink()} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><FiLayout className="mr-3 h-5 w-5" /> Dashboard</Link>
-                    <Link to="/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><FiUser className="mr-3 h-5 w-5" /> My Profile</Link>
+                    {userInfo.role !== 'admin' ? <Link to={getDashboardLink()} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><FiLayout className="mr-3 h-5 w-5" /> Dashboard</Link> :
+                      <Link to="/profile" className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><FiUser className="mr-3 h-5 w-5" /> My Profile</Link>}
                     <button onClick={handleLogout} className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100"><FiLogOut className="mr-3 h-5 w-5" /> Logout</button>
                   </div>
                 )}

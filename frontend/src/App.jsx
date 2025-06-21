@@ -20,6 +20,7 @@ import AdminDashboardPage from './pages/admin/Dashboard.jsx';
 import ManageShopOwnersPage from './pages/admin/ManageShopOwner.jsx';
 import ViewAllProductsPage from './pages/admin/Products.jsx';
 import ShopOwnerDashboardPage from './pages/shopowner/Dashboard.jsx';
+import ShopDetailPage from './pages/shopowner/ShopDetailPage.jsx';
 import NotFoundPage from './pages/NotFoundPage';
 import AdminPriceReportsPage from './pages/admin/AdminPriceReportPage.jsx';
 
@@ -49,6 +50,7 @@ const App = () => {
               <Route path="/admin/view-all-products" element={<ViewAllProductsPage />} />
               <Route path="/admin/price-reports" element={<AdminPriceReportsPage />} />
               <Route path="/shop-owner/dashboard" element={<ShopOwnerDashboardPage />} />
+              <Route path="/shops/:id" element={<ShopDetailPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>

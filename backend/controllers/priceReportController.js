@@ -10,6 +10,26 @@ import crypto from 'crypto'; // To generate a random password
  * @route   POST /api/reports
  * @access  Private
  */
+
+export const getPublicReports = async (req, res, next) => {
+  try {
+    const { productName } = req.query;
+    if (!productName) {
+      return res.json([]); // Return empty array if no product name is provided
+    }
+
+    // Find reports that are pending and match the product name (case-insensitive)
+    const reports = await PriceReport.find({
+      status: 'Pending',
+      productName: { $regex: productName, $options: 'i' }
+    }).sort({ createdAt: -1 });
+
+    res.json(reports);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createPriceReport = async (req, res, next) => {
   try {
     const { productName, marketName, shopName, reportedPrice } = req.body;

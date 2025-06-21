@@ -96,7 +96,7 @@ const FeaturedMarketsSection = ({ markets }) => (
           </Link>
         ))}
       </div>
-      <Link to="/market-list" className="inline-block mt-12 px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">Explore All Markets</Link>
+      <Link to="/markets" className="inline-block mt-12 px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700">Explore All Markets</Link>
     </div>
   </section>
 );

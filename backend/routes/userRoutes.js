@@ -4,14 +4,28 @@ import {
   getUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  getShopDetailsById,
+  uploadShopOwnersFile
 } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
+import multer from 'multer';
+
+// Setup multer for in-memory file storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 const router = express.Router();
 
+router.route('/shop/:id').get(getShopDetailsById);
+
 // All routes in this file are protected and require admin access
 router.use(protect, admin);
+
+// This is the new route to handle the file upload
+router.route('/upload')
+  .post(protect, admin, upload.single('file'), uploadShopOwnersFile);
+
 
 // @route   GET /api/users
 // @desc    Get all users

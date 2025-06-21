@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('userInfo');
     setUserInfo(null);
-    navigate('/login');
+    navigate('/');
   };
 
   // The value that will be available to all consuming components

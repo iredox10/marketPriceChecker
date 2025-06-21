@@ -1,0 +1,20 @@
+
+const Logo = ({ className }) => (
+  <svg className={className} viewBox="0 0 200 180" >
+    <path d="M40 70 Q50 60 160 70 L170 150 Q100 170 30 150 Z" fill="#F3F4F6" stroke="#D1D5DB" strokeWidth="4" />
+    <path d="M70 65 Q100 20 130 65" fill="none" stroke="#D1D5DB" strokeWidth="8" strokeLinecap="round" />
+    <circle cx="75" cy="110" r="20" fill="#EF4444" />
+    <path d="M75 90 Q80 85 85 90" stroke="#22C55E" strokeWidth="3" fill="none" strokeLinecap="round" />
+    <circle cx="115" cy="115" r="22" fill="#EF4444" />
+    <path d="M115 93 Q120 88 125 93" stroke="#22C55E" strokeWidth="3" fill="none" strokeLinecap="round" />
+    <ellipse cx="95" cy="135" rx="18" ry="15" fill="#FBBF24" />
+    <path d="M95 120 Q98 115 100 120" stroke="#F59E0B" strokeWidth="2" fill="none" />
+    <path d="M140 100 Q150 80 160 100 Q150 120 140 100 Z" fill="#22C55E" />
+    <path d="M130 90 Q145 70 155 90 Q145 110 130 90 Z" fill="#16A34A" />
+    <text x="100" y="175" fontFamily="Arial, sans-serif" fontSize="20" fill="#374151" textAnchor="middle" fontWeight="bold">
+      KanoPrice<tspan fill="#16A34A">Checker</tspan>
+    </text>
+  </svg>
+);
+
+export default Logo
