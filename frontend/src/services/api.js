@@ -37,6 +37,7 @@ api.interceptors.request.use((config) => {
 // == AUTH SERVICES ==
 const login = (email, password) => api.post('/auth/login', { email, password });
 const register = (userData) => api.post('/auth/register', userData);
+const forgotPassword = (emailData) => api.post('/auth/forgot-password', emailData); // Added this function
 
 // == PRODUCT SERVICES ==
 const getProducts = (params) => api.get('/products', { params });
@@ -83,6 +84,7 @@ const getShopDetails = (id) => api.get(`/users/shop/${id}`);
 export {
   login,
   register,
+  forgotPassword,
   getProducts,
   createProduct,
   addProductPrice,

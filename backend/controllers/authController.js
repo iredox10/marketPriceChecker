@@ -96,3 +96,50 @@ export const getUserProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+
+/**
+ * @desc    Generate and email a password reset token
+ * @route   POST /api/auth/forgot-password
+ * @access  Public
+ */
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+
+    if (!user) {
+      res.status(404);
+      throw new Error('No user found with that email address');
+    }
+
+    // Generate the random token
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    // Set token and expiry on the user model
+    user.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // Token expires in 10 minutes
+
+    await user.save({ validateBeforeSave: false });
+
+    // In a real app, you would email this link to the user
+    const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
+    console.log('Password Reset Link (for simulation):', resetUrl);
+
+    res.status(200).json({
+      success: true,
+      message: 'A password reset link has been sent to your email.'
+    });
+
+  } catch (error) {
+    // Clear token fields on error to allow user to try again
+    if (req.body.email) {
+      const user = await User.findOne({ email: req.body.email });
+      if (user) {
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save({ validateBeforeSave: false });
+      }
+    }
+    next(error);
+  }
+};

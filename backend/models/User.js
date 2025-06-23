@@ -37,6 +37,8 @@ const userSchema = new mongoose.Schema({
     // Only required if the role is ShopOwner
     required: function() { return this.role === 'ShopOwner'; },
   },
+  passwordResetToken: String,
+  passwordResetExpires: Date,
 }, {
   timestamps: true, // Adds createdAt and updatedAt timestamps
 });
